@@ -41,7 +41,21 @@ def optimize_circuit(params):
 
     # Minimize the circuit
 
-    
+    def cost(params):
+        return circuit(params)
+
+    opt = qml.AdamOptimizer(stepsize=0.01)
+
+    steps = 90
+
+    training_params = params
+
+    for i in range (steps):
+        training_params = opt.step(cost, training_params)
+
+    optimal_value = cost(training_params)
+
+
 
     # QHACK #
 
