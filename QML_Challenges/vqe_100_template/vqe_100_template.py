@@ -74,7 +74,7 @@ def run_vqe(H):
 
     circuit = qml.QNode(variational_ansatz, dev)  # Maybe not needed
 
-    cost_fn = qml.ExpvalCost(variational_ansatz, params, dev)
+    cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
 
     opt = qml.AdamOptimizer(stepsize=0.01)
     np.random.seed(0)
@@ -88,10 +88,6 @@ def run_vqe(H):
 
         if n % 20 == 0:
             print('Iteration = {:},  Energy = {:.8f} Ha'.format(n, energy))
-
-
-
-
 
 
 
