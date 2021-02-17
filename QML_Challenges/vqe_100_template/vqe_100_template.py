@@ -72,24 +72,20 @@ def run_vqe(H):
 
     dev = qml.device('default.qubit', wires=num_qubits)
 
-    circuit = qml.QNode(variational_ansatz, dev)  # Maybe not needed
-
     cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
-
     opt = qml.AdamOptimizer(stepsize=0.01)
     np.random.seed(0)
 
-    max_iterations = 200
+    max_iterations = 600
+    conv_tolerance = 0.00001
 
     for n in range(max_iterations):
         params, prev_energy = opt.step_and_cost(cost_fn, params)
         energy = cost_fn(params)
         conv = np.abs(energy - prev_energy)
 
-        if n % 20 == 0:
-            print('Iteration = {:},  Energy = {:.8f} Ha'.format(n, energy))
-
-
+        if conv <= conv_tolerance:
+            break
 
     # QHACK #
 
