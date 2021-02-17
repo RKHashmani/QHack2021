@@ -5,7 +5,6 @@ import networkx as nx
 import numpy as np
 import pennylane as qml
 
-
 # DO NOT MODIFY any of these parameters
 NODES = 6
 N_LAYERS = 10
@@ -30,10 +29,34 @@ def find_max_independent_set(graph, params):
 
     max_ind_set = []
 
-    # QHACK #
+    cost_h, mixer_h = qml.qaoa.max_independent_set(graph, constrained=True)
+    def qaoa_layer(gamma, alpha):
+        qml.qaoa.cost_layer(gamma, cost_h)
+        qml.qaoa.mixer_layer(alpha, mixer_h)
 
-    # QHACK #
+    def circuit(params_, **kwargs):
+        qml.layer(qaoa_layer, N_LAYERS, params_[0], params_[1])
 
+    @qml.qnode(qml.device("default.qubit", wires=NODES))
+    def probability_circuit(params):
+        circuit(params)
+        return qml.probs(wires=range(NODES))
+
+    probs = probability_circuit(params)
+    print(probs)
+    print(np.max(probs))
+    decimal = np.argmax(probs)
+    print(decimal)
+    def decimalToBinary(n): 
+        return bin(n).replace("0b", "")
+    #convert to binary and reverse
+    bin_ = decimalToBinary(decimal)[::-1]
+    print(bin_)
+    count = 0 
+    for s in bin_:
+        if s=='1':
+            max_ind_set.append(count)
+        count+=1
     return max_ind_set
 
 
