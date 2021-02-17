@@ -33,7 +33,103 @@ def classify_data(X_train, Y_train, X_test):
     LAYERS = 2
     WIRES = 3
 
-    dev = qml.device('default.qubit', wires=WIRES)
+
+    np.random.seed(0)
+
+    num_classes = 3
+    margin = 0.15
+    feature_size = 3
+    batch_size = 10
+    lr_adam = 0.01
+    train_split = 0.75
+    # the number of the required qubits is calculated from the number of features
+    num_qubits = int(np.ceil(np.log2(feature_size)))
+    num_layers = 6
+    total_iterations = 100
+
+    dev = qml.device("default.qubit", wires=num_qubits)
+
+    def layer(W):
+        for i in range(num_qubits):
+            qml.Rot(W[i, 0], W[i, 1], W[i, 2], wires=i)
+        for j in range(num_qubits - 1):
+            qml.CNOT(wires=[j, j + 1])
+        if num_qubits >= 2:
+            # Apply additional CNOT to entangle the last with the first qubit
+            qml.CNOT(wires=[num_qubits - 1, 0])
+
+    def circuit(weights, feat=None):
+        qml.templates.embeddings.AmplitudeEmbedding(feat, range(num_qubits), pad=0.0, normalize=True)
+        for W in weights:
+            layer(W)
+
+        return qml.expval(qml.PauliZ(0))
+
+    qnodes = []
+    for iq in range(num_classes):
+        qnode = qml.QNode(circuit, dev)
+        qnodes.append(qnode)
+
+    def variational_classifier(q_circuit, params, feat):
+        weights = params[0]
+        bias = params[1]
+        return q_circuit(weights, feat=feat) + bias
+
+    def multiclass_svm_loss(q_circuits, all_params, feature_vecs, true_labels):
+        loss = 0
+        num_samples = len(true_labels)
+        for i, feature_vec in enumerate(feature_vecs):
+            # Compute the score given to this sample by the classifier corresponding to the
+            # true label. So for a true label of 1, get the score computed by classifer 1,
+            # which distinguishes between "class 1" or "not class 1".
+            s_true = variational_classifier(
+                q_circuits[int(true_labels[i])],
+                (all_params[0][int(true_labels[i])], all_params[1][int(true_labels[i])]),
+                feature_vec,
+            )
+            s_true = s_true
+            li = 0
+
+            # Get the scores computed for this sample by the other classifiers
+            for j in range(num_classes):
+                if j != int(true_labels[i]):
+                    s_j = variational_classifier(
+                        q_circuits[j], (all_params[0][j], all_params[1][j]), feature_vec
+                    )
+                    s_j = s_j
+                    li += np.amax([0, s_j - s_true + margin])
+            loss += li
+
+        return loss / num_samples
+
+    def classify(q_circuits, all_params, feature_vecs):
+        predicted_labels = []
+        for i, feature_vec in enumerate(feature_vecs):
+            scores = np.zeros(num_classes)
+            for c in range(num_classes):
+                score = variational_classifier(
+                    q_circuits[c], (all_params[0][c], all_params[1][c]), feature_vec
+                )
+                scores[c] = float(score)
+            pred_class = np.argmax(scores)
+            # pred_class -= 1  # To get correct labels
+            predicted_labels.append(pred_class)
+        return predicted_labels
+
+    def accuracy(labels, hard_predictions):
+        loss = 0
+        for l, p in zip(labels, hard_predictions):
+            if np.abs(l - p) < 1e-5:
+                loss = loss + 1
+        loss = loss / labels.shape[0]
+        return loss
+
+
+
+
+
+
+
 
     # Minimize the circuit
     def variational_circuit(inputs, params):
@@ -65,6 +161,36 @@ def classify_data(X_train, Y_train, X_test):
 
     training_params= np.random.rand((LAYERS * WIRES * 3))
 
+
+
+
+
+    all_weights = [
+        (0.1 * np.random.rand(num_layers, num_qubits, 3))
+        for i in range(num_classes)
+    ]
+    all_bias = [(0.1 * np.ones(1)) for i in range(num_classes)]
+
+    params = (all_weights, all_bias)
+    q_circuits = qnodes
+
+    Y_train += 1  # To change labels to 0, 1, 2
+
+    pred = classify(q_circuits, params, X_test)
+
+    pred = [x - 1 for x in pred]  # To get original label
+
+    print (pred)
+
+
+    curr_cost = multiclass_svm_loss(q_circuits, params, X_train, Y_train)
+    print(curr_cost)
+
+
+
+
+
+
     for i in range (steps):
         training_params, prev_cost = opt.step_and_cost(lambda v: cost(v, X_train, Y_train), training_params)
 
@@ -78,7 +204,7 @@ def classify_data(X_train, Y_train, X_test):
         if conv <= conv_tolerance:
             break
 
-    predictions = [circuit(x, training_params) for x in X_test]
+    predictions = classify(q_circuits, training_params, X_test)
 
     # QHACK #
 
