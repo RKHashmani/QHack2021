@@ -43,15 +43,13 @@ def find_max_independent_set(graph, params):
         return qml.probs(wires=range(NODES))
 
     probs = probability_circuit(params)
-    print(probs)
-    print(np.max(probs))
     decimal = np.argmax(probs)
-    print(decimal)
     def decimalToBinary(n): 
         return bin(n).replace("0b", "")
     #convert to binary and reverse
-    bin_ = decimalToBinary(decimal)[::-1]
-    print(bin_)
+    bin_ = decimalToBinary(decimal)
+    while len(bin_)<6:
+        bin_ = '0'+bin_
     count = 0 
     for s in bin_:
         if s=='1':

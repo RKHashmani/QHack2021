@@ -28,9 +28,29 @@ def classify_data(X_train, Y_train, X_test):
     # Use this array to make a prediction for the labels of the data in X_test
     predictions = []
 
-    # QHACK #
+    LAYERS = 2
+    WIRES = 3
+    dev = qml.device('default.qubit', wires=WIRES)
 
-    # QHACK #
+    # Minimize the circuit
+    def variational_circuit(inputs, params):
+        parameters = params.reshape((LAYERS, WIRES, 3))
+        qml.templates.embeddings.AngleEmbedding(inputs, wires=3, rotation='Y')
+        qml.templates.StronglyEntanglingLayers(parameters, wires=range(WIRES))
+        return qml.expval(qml.Z(wires=range(WIRES)))
+
+    circuit = qml.QNode(variational_circuit, dev)
+    def cost(inputs, params):
+        return circuit(inputs, params)
+
+    opt = qml.AdamOptimizer(stepsize=0.01)
+
+    steps = 90
+
+    training_params= np.random.rand((LAYERS * WIRES * 3))
+
+    for i in range (steps):
+        training_params = opt.step(cost, training_params)
 
     return array_to_concatenated_string(predictions)
 
