@@ -34,7 +34,7 @@ def simple_circuits_20(angle):
     # Step 3 : Run the qnode
     # prob = ?
 
-    prob = circuit(angle)
+    prob = circuit(angle)[0]
 
     # QHACK #
     return prob
