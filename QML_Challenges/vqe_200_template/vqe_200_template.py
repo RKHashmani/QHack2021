@@ -22,6 +22,29 @@ def variational_ansatz(params, wires):
 
     # QHACK #
 
+    n_qubits = len(wires)
+    n_rotations = len(params)
+
+    if n_rotations > 1:
+        n_layers = n_rotations // n_qubits
+        n_extra_rots = n_rotations - n_layers * n_qubits
+
+        # Alternating layers of unitary rotations on every qubit followed by a
+        # ring cascade of CNOTs.
+        for layer_idx in range(n_layers):
+            layer_params = params[layer_idx * n_qubits: layer_idx * n_qubits + n_qubits, :]
+            qml.broadcast(qml.Rot, wires, pattern="single", parameters=layer_params)
+            qml.broadcast(qml.CNOT, wires, pattern="ring")
+
+        # There may be "extra" parameter sets required for which it's not necessarily
+        # to perform another full alternating cycle. Apply these to the qubits as needed.
+        extra_params = params[-n_extra_rots:, :]
+        extra_wires = wires[: n_qubits - 1 - n_extra_rots: -1]
+        qml.broadcast(qml.Rot, extra_wires, pattern="single", parameters=extra_params)
+    else:
+        # For 1-qubit case, just a single rotation to the qubit
+        qml.Rot(*params[0], wires=wires[0])
+
     # QHACK #
 
 
@@ -41,14 +64,15 @@ def run_vqe(H):
 
     # QHACK #
 
+    num_qubits = len(H.wires)
+    num_param_sets = (2 ** num_qubits) - 1
+
     # Initialize the quantum device
 
     dev = qml.device('default.qubit', wires=num_qubits)
 
     # Randomly choose initial parameters (how many do you need?)
 
-    num_qubits = len(H.wires)
-    num_param_sets = (2 ** num_qubits) - 1
     params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
 
     # Set up a cost function
@@ -72,6 +96,8 @@ def run_vqe(H):
 
         if conv <= conv_tolerance:
             break
+
+    print(dev._state)
 
     # QHACK #
 
