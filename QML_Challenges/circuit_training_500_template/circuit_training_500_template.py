@@ -28,29 +28,59 @@ def classify_data(X_train, Y_train, X_test):
     # Use this array to make a prediction for the labels of the data in X_test
     predictions = []
 
+    # QHACK #
+
     LAYERS = 2
     WIRES = 3
+
     dev = qml.device('default.qubit', wires=WIRES)
 
     # Minimize the circuit
     def variational_circuit(inputs, params):
         parameters = params.reshape((LAYERS, WIRES, 3))
-        qml.templates.embeddings.AngleEmbedding(inputs, wires=3, rotation='Y')
+        qml.templates.embeddings.AngleEmbedding(inputs, wires=[0, 1, 2], rotation='Y')
         qml.templates.StronglyEntanglingLayers(parameters, wires=range(WIRES))
-        return qml.expval(qml.Z(wires=range(WIRES)))
+        return qml.expval(qml.PauliZ(0))
+
+
 
     circuit = qml.QNode(variational_circuit, dev)
-    def cost(inputs, params):
-        return circuit(inputs, params)
 
-    opt = qml.AdamOptimizer(stepsize=0.01)
+    def square_loss(labels, predictions):
+        loss = 0
+        for l, p in zip(labels, predictions):
+            loss = loss + (l - p) ** 2
+
+        loss = loss / len(labels)
+        return loss
+
+    def cost(params, X_train, Y_train):
+        predictions = [circuit(x, params) for x in X_train ]
+        return square_loss(Y_train, predictions)
+
+    opt = qml.AdamOptimizer(stepsize=0.1)
 
     steps = 90
+    conv_tolerance = 0.01
 
     training_params= np.random.rand((LAYERS * WIRES * 3))
 
     for i in range (steps):
-        training_params = opt.step(cost, training_params)
+        training_params, prev_cost = opt.step_and_cost(lambda v: cost(v, X_train, Y_train), training_params)
+
+        curr_cost = cost(training_params, X_train, Y_train)
+
+        conv = np.abs(curr_cost - prev_cost)
+
+        if (i + 1) % 2 == 0:
+            print("Cost after step {:5d}: {: .7f}".format(i + 1, curr_cost))
+
+        if conv <= conv_tolerance:
+            break
+
+    predictions = [circuit(x, training_params) for x in X_test]
+
+    # QHACK #
 
     return array_to_concatenated_string(predictions)
 
