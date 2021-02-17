@@ -43,13 +43,35 @@ def run_vqe(H):
 
     # Initialize the quantum device
 
+    dev = qml.device('default.qubit', wires=num_qubits)
+
     # Randomly choose initial parameters (how many do you need?)
+
+    num_qubits = len(H.wires)
+    num_param_sets = (2 ** num_qubits) - 1
+    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
 
     # Set up a cost function
 
+    cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
+
     # Set up an optimizer
 
+    opt = qml.AdamOptimizer(stepsize=0.1)
+    np.random.seed(0)
+
     # Run the VQE by iterating over many steps of the optimizer
+
+    max_iterations = 1000
+    conv_tolerance = 0.00001
+
+    for n in range(max_iterations):
+        params, prev_energy = opt.step_and_cost(cost_fn, params)
+        energy = cost_fn(params)
+        conv = np.abs(energy - prev_energy)
+
+        if conv <= conv_tolerance:
+            break
 
     # QHACK #
 
