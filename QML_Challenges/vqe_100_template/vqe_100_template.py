@@ -73,10 +73,10 @@ def run_vqe(H):
     dev = qml.device('default.qubit', wires=num_qubits)
 
     cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
-    opt = qml.AdamOptimizer(stepsize=0.01)
+    opt = qml.AdamOptimizer(stepsize=0.1)
     np.random.seed(0)
 
-    max_iterations = 600
+    max_iterations = 1000
     conv_tolerance = 0.00001
 
     for n in range(max_iterations):
