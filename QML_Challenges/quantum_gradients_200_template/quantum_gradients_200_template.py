@@ -45,21 +45,29 @@ def gradient_200(weights, dev):
     gradient = np.zeros([5], dtype=np.float64)
     hessian = np.zeros([5, 5], dtype=np.float64)
 
-    eps = np.pi/2
+    f = circuit(weights)
+
+    eps = np.pi/4
+
+    exp_p = np.zeros([5], dtype=np.float64)
+    exp_m = np.zeros([5], dtype=np.float64)
 
     for k in range(gradient.shape[0]):
         eps_plus = weights.copy()
         eps_plus[k] += eps
         exp_value_plus = circuit(eps_plus)
+        exp_p[k] = exp_value_plus
 
         eps_minus = weights.copy()
         eps_minus[k] -= eps
         exp_value_minus = circuit(eps_minus)
+        exp_m[k] = exp_value_minus
 
         gradient[k] = (exp_value_plus - exp_value_minus)/(2*np.sin(eps))
         
+   
     for k in range(gradient.shape[0]):
-        hessian[k,k] = gradient[k]**2
+        hessian[k,k] = (exp_p[k]+exp_m[k] - 2*f)/(4*(np.sin(eps/2)**2)) 
         for l in range(gradient.shape[0]):
             if l<k:
                 eps_pp = weights.copy()
@@ -104,12 +112,6 @@ if __name__ == "__main__":
     dev = qml.device("default.qubit", wires=3)
     gradient, hessian, diff_method = gradient_200(weights, dev)
 
-    ans1 = np.array([0.0012756024,-0.7668909241,-0.1890228368,-0.0374176229,-0.7914937431,0.012713476,0.0,0.012713476,0.0062927444,0.0015144486,0.0,-0.6210429671,0.0769457494,0.1248084389,-0.6036371367,0.012713476,0.0769457494,-0.6083294911,-0.6276219392,-0.0725364203,0.0062927444,0.1248084389,-0.6276219392,0.1375219149,-0.0444237671,0.0015144486,-0.6036371367,-0.0725364203,-0.0444237671,-0.6083294911,51])
-    ans2 = np.array([0.0,-0.7867925232,-0.4765400998,0.3633757437,-0.9097065086,0.0,0.0,-0.3652848213,-0.0,0.0,0.0,0.1429477461,0.0,0.4779974229,0.3434255479,-0.3652848213,0.0,0.1429477461,-0.5657683412,-0.1852690548,-0.0,0.4779974229,-0.5657683412,0.4314148837,0.1412730651,0.0,0.3434255479,-0.1852690548,0.1412730651,0.1429477461,51])
-    print(dev.num_executions)
-    my_ans = np.concatenate((gradient, hessian.flatten()))
-    print(np.abs(ans2[:-1]-my_ans)<0.05)
-    '''
     print(
         *np.round(gradient, 10),
         *np.round(hessian.flatten(), 10),
@@ -117,4 +119,4 @@ if __name__ == "__main__":
         diff_method,
         sep=","
     )
-    '''
+
