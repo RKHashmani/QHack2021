@@ -45,9 +45,49 @@ def gradient_200(weights, dev):
     gradient = np.zeros([5], dtype=np.float64)
     hessian = np.zeros([5, 5], dtype=np.float64)
 
-    # QHACK #
+    eps = np.pi/2
 
-    # QHACK #
+    for k in range(gradient.shape[0]):
+        eps_plus = weights.copy()
+        eps_plus[k] += eps
+        exp_value_plus = circuit(eps_plus)
+
+        eps_minus = weights.copy()
+        eps_minus[k] -= eps
+        exp_value_minus = circuit(eps_minus)
+
+        gradient[k] = np.mean(exp_value_plus - exp_value_minus)/(2*np.sin(eps))
+        
+    for k in range(gradient.shape[0]):
+        for l in range(gradient.shape[0]):
+            if l<=k:
+                eps_pp = weights.copy()
+                eps_pp[k] += eps
+                eps_pp[l] += eps
+
+                eps_pm = weights.copy()
+                eps_pm[k] += eps
+                eps_pm[l] -= eps
+
+                eps_mp = weights.copy()
+                eps_mp[k] -= eps
+                eps_mp[l] += eps
+
+                eps_mm = weights.copy()
+                eps_mm[k] -= eps
+                eps_mm[l] -= eps
+
+                measure_pp = circuit(eps_pp)
+                measure_pm = circuit(eps_pm)
+                measure_mp = circuit(eps_mp)
+                measure_mm = circuit(eps_mm)
+                
+                hessian[k,l] = np.mean(measure_pp + measure_mm - measure_mp - measure_pm)/(4*(np.sin(eps)**2))
+
+    for k in range(gradient.shape[0]):
+        for l in range(gradient.shape[0]):
+            if l>k:
+                hessian[k,l] = hessian[l,k]
 
     return gradient, hessian, circuit.diff_options["method"]
 
