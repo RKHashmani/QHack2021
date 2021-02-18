@@ -35,12 +35,10 @@ def classify_data(X_train, Y_train, X_test):
     num_classes = 3
     margin = 0.15
     feature_size = 3
-    batch_size = 10
 
     # the number of the required qubits is calculated from the number of features
     num_qubits = int(np.ceil(np.log2(feature_size)))
     num_layers = 2
-    total_iterations = 100
 
     dev = qml.device("default.qubit", wires=num_qubits)
 
@@ -108,13 +106,8 @@ def classify_data(X_train, Y_train, X_test):
                 )
                 scores[c] = float(score)
             pred_class = np.argmax(scores)
-            # pred_class -= 1  # To get correct labels
             predicted_labels.append(pred_class)
         return predicted_labels
-
-
-
-
 
 
     all_weights = [
@@ -126,42 +119,24 @@ def classify_data(X_train, Y_train, X_test):
     training_params = (all_weights, all_bias)
     q_circuits = qnodes
 
-    Y_train += 1  # To change labels to 0, 1, 2
-
-
-
-
-    #  curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
-    #  print(curr_cost)
-
     opt = qml.AdamOptimizer(stepsize=0.1)
 
-    steps = 20
+    steps = 12
     conv_tolerance = 0.001
+
+    Y_train += 1  # To change labels to 0, 1, 2
 
     for i in range (steps):
         training_params, prev_cost = opt.step_and_cost(lambda v: multiclass_svm_loss(q_circuits, v, X_train, Y_train), training_params)
+        #curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
+        #conv = np.abs(curr_cost - prev_cost)
 
-        curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
+        #if conv <= conv_tolerance:
+        #    break
 
-        conv = np.abs(curr_cost - prev_cost)
-        print (conv)
 
-        if (i + 1) % 2 == 0:
-            print("Cost after step {:5d}: {: .7f}".format(i + 1, curr_cost[0]))
-
-        if (i + 1) % 10 == 0:
-            pred = classify(q_circuits, training_params, X_test)
-            pred = [x - 1 for x in pred]  # To get original label
-            print (pred)
-
-        if conv <= conv_tolerance:
-            break
-
-    # To check Predictions. Move elsewhere.
     pred = classify(q_circuits, training_params, X_test)
     pred = [x - 1 for x in pred]  # To get original label
-    print (pred)
 
     predictions = pred
 
