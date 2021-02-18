@@ -119,10 +119,11 @@ def classify_data(X_train, Y_train, X_test):
     training_params = (all_weights, all_bias)
     q_circuits = qnodes
 
-    opt = qml.AdamOptimizer(stepsize=0.1)
+    opt = qml.AdamOptimizer(stepsize=0.18)
 
     steps = 12
     conv_tolerance = 0.001
+    cost_tol = 0.01
 
     Y_train += 1  # To change labels to 0, 1, 2
 
@@ -133,6 +134,13 @@ def classify_data(X_train, Y_train, X_test):
 
         #if conv <= conv_tolerance:
         #    break
+
+        print("Cost after step {:5d}: {: .7f}".format(i + 1, prev_cost[0]))
+
+        if prev_cost <= cost_tol:
+            break
+
+    print ("current cost:", multiclass_svm_loss(q_circuits, training_params, X_train, Y_train))
 
 
     pred = classify(q_circuits, training_params, X_test)
