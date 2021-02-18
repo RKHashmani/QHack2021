@@ -23,19 +23,15 @@ def variational_ansatz(params, wires):
     # QHACK #
 
     n_qubits = len(wires)
-    n_rotations = len(params)
 
-    hf_state = np.zeros(n_qubits)
+    qml.RY(params[0], wires=wires[0])
 
-    qml.BasisState(hf_state, wires=wires)
-    for i in wires:
-        qml.RZ(params[3 * i], wires=i)
-        qml.RY(params[3 * i + 1], wires=i)
-        qml.RX(params[3 * i + 2], wires=i)
-    # qml.CNOT(wires=[0, 1])
-    # qml.CNOT(wires=[2, 0])
-    # qml.CNOT(wires=[3, 1])
-    qml.broadcast(qml.CNOT, wires, pattern="ring")
+    for i in range(1, n_qubits - 1):
+        qml.CRY(params[i], wires=wires[i - 1: i + 1])
+
+    qml.broadcast(qml.CNOT, wires, pattern="all_to_all")
+
+    qml.PauliY(wires=wires[0])
 
     # QHACK #
 
@@ -57,7 +53,6 @@ def run_vqe(H):
     # QHACK #
 
     num_qubits = len(H.wires)
-    num_param_sets = (2 ** num_qubits) - 1
 
     # Initialize the quantum device
 
@@ -65,8 +60,7 @@ def run_vqe(H):
 
     # Randomly choose initial parameters (how many do you need?)
 
-    # params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
-    params = np.random.uniform(low=0, high=2 * np.pi, size=12)
+    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_qubits))
 
     # Set up a cost function
 
@@ -89,8 +83,6 @@ def run_vqe(H):
 
         if conv <= conv_tolerance:
             break
-
-    print("The output state is:\n", dev._state)
 
     # QHACK #
 
