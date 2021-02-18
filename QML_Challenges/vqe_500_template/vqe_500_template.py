@@ -131,14 +131,14 @@ def find_excited_states(H):
 
     opt = qml.AdamOptimizer(stepsize=0.4)
     opt2 = qml.AdamOptimizer(stepsize=0.4)
-    opt3 = qml.AdamOptimizer(stepsize=0.4)
+    opt3 = qml.AdamOptimizer(stepsize=1)
     num_param_sets = (2 ** qubits) - 1
     params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
     params2 = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
     params3 = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
 
-    max_iterations = 100
-    conv_tol = 1e-06
+    max_iterations = 300
+    conv_tol = 1e-07
 
     for n in range(max_iterations):
         params, prev_energy = opt.step_and_cost(cost_fn, params)
@@ -152,7 +152,7 @@ def find_excited_states(H):
     energies[0] = energy
 
     def cost_fn_2(params):
-        return cost_fn(params)+10*(variational_ansatz2(params))**2 # 10
+        return cost_fn(params)+100*(variational_ansatz2(params))**2 # 10
 
     for n in range(max_iterations):
         params2, prev_energy2 = opt2.step_and_cost(cost_fn_2, params2)
@@ -165,13 +165,12 @@ def find_excited_states(H):
     state1 = dev.state 
 
     def cost_fn_3(params):
-        return cost_fn(params)+10*(variational_ansatz2(params))**2+30*(variational_ansatz3(params))**2
+        return cost_fn(params)+100*(variational_ansatz2(params))**2+160*(variational_ansatz3(params))**2
     max_iterations = 200
     for n in range(max_iterations):
         params3, prev_energy3 = opt3.step_and_cost(cost_fn_3, params3)
         energy3 = cost_fn_3(params3)
         conv = np.abs(energy3 - prev_energy3)
-        print(n, energy3)
         '''
         if conv <= conv_tol:
             break
