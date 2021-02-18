@@ -90,7 +90,6 @@ def classify_data(X_train, Y_train, X_test):
                         q_circuits[j], (all_params[0][j], all_params[1][j]), feature_vec
                     )
                     s_j = s_j
-                    # li += np.amax([0, s_j - s_true + margin]) # Maybe change to simple max
                     li += max(0, s_j - s_true + margin)
             loss += li
 
@@ -122,26 +121,15 @@ def classify_data(X_train, Y_train, X_test):
     opt = qml.AdamOptimizer(stepsize=0.18)
 
     steps = 12
-    conv_tolerance = 0.001
-    cost_tol = 0.01
+    cost_tol = 0.008
 
     Y_train += 1  # To change labels to 0, 1, 2
 
     for i in range (steps):
         training_params, prev_cost = opt.step_and_cost(lambda v: multiclass_svm_loss(q_circuits, v, X_train, Y_train), training_params)
-        #curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
-        #conv = np.abs(curr_cost - prev_cost)
-
-        #if conv <= conv_tolerance:
-        #    break
-
-        print("Cost after step {:5d}: {: .7f}".format(i + 1, prev_cost[0]))
 
         if prev_cost <= cost_tol:
             break
-
-    print ("current cost:", multiclass_svm_loss(q_circuits, training_params, X_train, Y_train))
-
 
     pred = classify(q_circuits, training_params, X_test)
     pred = [x - 1 for x in pred]  # To get original label
