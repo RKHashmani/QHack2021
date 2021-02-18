@@ -22,6 +22,103 @@ def find_excited_states(H):
     energies = np.zeros(3)
 
     # QHACK #
+    
+    from functools import partial
+    from pennylane.templates.subroutines import UCCSD
+    from pennylane import qchem
+
+    qubits = len(H.wires)
+    dev = qml.device("default.qubit", wires=qubits)
+    state = np.zeros(2**qubits, dtype=np.complex)
+    state[0] = 1
+
+    def variational_ansatz(params,wires):
+        n_qubits = len(wires)
+        n_rotations = len(params)
+
+        #qml.templates.state_preparations.MottonenStatePreparation(state,wires)
+
+        if n_rotations > 1:
+            n_layers = n_rotations // n_qubits
+            n_extra_rots = n_rotations - n_layers * n_qubits
+
+            # Alternating layers of unitary rotations on every qubit followed by a
+            # ring cascade of CNOTs.
+            for layer_idx in range(n_layers):
+                layer_params = params[layer_idx * n_qubits : layer_idx * n_qubits + n_qubits, :]
+                qml.broadcast(qml.Rot, wires, pattern="single", parameters=layer_params)
+                qml.broadcast(qml.CNOT, wires, pattern="ring")
+
+            # There may be "extra" parameter sets required for which it's not necessarily
+            # to perform another full alternating cycle. Apply these to the qubits as needed.
+            extra_params = params[-n_extra_rots:, :]
+            extra_wires = wires[: n_qubits - 1 - n_extra_rots : -1]
+            qml.broadcast(qml.Rot, extra_wires, pattern="single", parameters=extra_params)
+        else:
+            # For 1-qubit case, just a single rotation to the qubit
+            qml.Rot(*params[0], wires=wires[0])
+
+    
+    dev2 = qml.device("default.qubit", wires=qubits)
+    @qml.qnode(dev2)
+    def variational_ansatz2(params):
+        wires = range(len(H.wires))
+        n_qubits = len(wires)
+        n_rotations = len(params)
+        qml.PauliX(0)
+
+        if n_rotations > 1:
+            n_layers = n_rotations // n_qubits
+            n_extra_rots = n_rotations - n_layers * n_qubits
+
+            # Alternating layers of unitary rotations on every qubit followed by a
+            # ring cascade of CNOTs.
+            for layer_idx in range(n_layers):
+                layer_params = params[layer_idx * n_qubits : layer_idx * n_qubits + n_qubits, :]
+                qml.broadcast(qml.Rot, wires, pattern="single", parameters=layer_params)
+                qml.broadcast(qml.CNOT, wires, pattern="ring")
+
+            # There may be "extra" parameter sets required for which it's not necessarily
+            # to perform another full alternating cycle. Apply these to the qubits as needed.
+            extra_params = params[-n_extra_rots:, :]
+            extra_wires = wires[: n_qubits - 1 - n_extra_rots : -1]
+            qml.broadcast(qml.Rot, extra_wires, pattern="single", parameters=extra_params)
+        else:
+            # For 1-qubit case, just a single rotation to the qubit
+            qml.Rot(*params[0], wires=wires[0])
+
+
+        qml.inv(qml.templates.state_preparations.MottonenStatePreparation(state,wires))
+        return qml.expval(qml.PauliZ(0))
+
+    cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
+    cost_fn_2 = variational_ansatz2
+
+    opt = qml.AdamOptimizer(stepsize=0.4)
+    opt2 = qml.AdamOptimizer(stepsize=0.4)
+    num_param_sets = (2 ** qubits) - 1
+    params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
+    params2 = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
+
+    max_iterations = 100
+    conv_tol = 1e-06
+
+    for n in range(max_iterations):
+        params, prev_energy = opt.step_and_cost(cost_fn, params)
+        params2, prev_energy2 = opt2.step_and_cost(cost_fn_2, params2)
+        energy = cost_fn(params)
+        energy2 = cost_fn_2(params)
+        state = dev.state 
+        conv = np.abs(energy - prev_energy)
+        print(n,energy,energy2)
+        if conv <= conv_tol:
+            break
+    
+        energies[0] = energy
+    
+
+
+
 
     # QHACK #
 
