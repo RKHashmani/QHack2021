@@ -65,7 +65,6 @@ def find_excited_states(H):
         wires = range(len(H.wires))
         n_qubits = len(wires)
         n_rotations = len(params)
-        qml.PauliX(0)
 
         if n_rotations > 1:
             n_layers = n_rotations // n_qubits
@@ -88,38 +87,97 @@ def find_excited_states(H):
             qml.Rot(*params[0], wires=wires[0])
 
 
-        qml.inv(qml.templates.state_preparations.MottonenStatePreparation(state,wires))
-        return qml.expval(qml.PauliZ(0))
+        qml.inv(qml.templates.state_preparations.MottonenStatePreparation(state0,wires))
+        projector = np.zeros((2**qubits, 2**qubits))
+        projector[0, 0] = 1
+        return qml.expval(qml.Hermitian(projector, wires=range(qubits)))
+
+    dev3 = qml.device("default.qubit", wires=qubits)
+    @qml.qnode(dev3)
+    def variational_ansatz3(params):
+        wires = range(len(H.wires))
+        n_qubits = len(wires)
+        n_rotations = len(params)
+
+        if n_rotations > 1:
+            n_layers = n_rotations // n_qubits
+            n_extra_rots = n_rotations - n_layers * n_qubits
+
+            # Alternating layers of unitary rotations on every qubit followed by a
+            # ring cascade of CNOTs.
+            for layer_idx in range(n_layers):
+                layer_params = params[layer_idx * n_qubits : layer_idx * n_qubits + n_qubits, :]
+                qml.broadcast(qml.Rot, wires, pattern="single", parameters=layer_params)
+                qml.broadcast(qml.CNOT, wires, pattern="ring")
+
+            # There may be "extra" parameter sets required for which it's not necessarily
+            # to perform another full alternating cycle. Apply these to the qubits as needed.
+            extra_params = params[-n_extra_rots:, :]
+            extra_wires = wires[: n_qubits - 1 - n_extra_rots : -1]
+            qml.broadcast(qml.Rot, extra_wires, pattern="single", parameters=extra_params)
+        else:
+            # For 1-qubit case, just a single rotation to the qubit
+            qml.Rot(*params[0], wires=wires[0])
+
+
+        qml.inv(qml.templates.state_preparations.MottonenStatePreparation(state1,wires))
+        projector = np.zeros((2**qubits, 2**qubits))
+        projector[0, 0] = 1
+        return qml.expval(qml.Hermitian(projector, wires=range(qubits)))
 
     cost_fn = qml.ExpvalCost(variational_ansatz, H, dev)
-    cost_fn_2 = variational_ansatz2
+        
+
 
     opt = qml.AdamOptimizer(stepsize=0.4)
     opt2 = qml.AdamOptimizer(stepsize=0.4)
+    opt3 = qml.AdamOptimizer(stepsize=0.4)
     num_param_sets = (2 ** qubits) - 1
     params = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
     params2 = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
+    params3 = np.random.uniform(low=-np.pi / 2, high=np.pi / 2, size=(num_param_sets, 3))
 
     max_iterations = 100
     conv_tol = 1e-06
 
     for n in range(max_iterations):
         params, prev_energy = opt.step_and_cost(cost_fn, params)
-        params2, prev_energy2 = opt2.step_and_cost(cost_fn_2, params2)
         energy = cost_fn(params)
-        energy2 = cost_fn_2(params)
-        state = dev.state 
         conv = np.abs(energy - prev_energy)
-        print(n,energy,energy2)
+        #print(n,energy)
         if conv <= conv_tol:
             break
+
+    state0 = dev.state 
+    energies[0] = energy
+
+    def cost_fn_2(params):
+        return cost_fn(params)+10*(variational_ansatz2(params))**2 # 10
+
+    for n in range(max_iterations):
+        params2, prev_energy2 = opt2.step_and_cost(cost_fn_2, params2)
+        energy2 = cost_fn_2(params2)
+        conv = np.abs(energy2 - prev_energy2)
+        if conv <= conv_tol:
+            break
+        
+    energies[1] = cost_fn(params2)
+    state1 = dev.state 
+
+    def cost_fn_3(params):
+        return cost_fn(params)+10*(variational_ansatz2(params))**2+30*(variational_ansatz3(params))**2
+    max_iterations = 200
+    for n in range(max_iterations):
+        params3, prev_energy3 = opt3.step_and_cost(cost_fn_3, params3)
+        energy3 = cost_fn_3(params3)
+        conv = np.abs(energy3 - prev_energy3)
+        print(n, energy3)
+        '''
+        if conv <= conv_tol:
+            break
+        '''
+    energies[2] = cost_fn(params3)
     
-        energies[0] = energy
-    
-
-
-
-
     # QHACK #
 
     return ",".join([str(E) for E in energies])
