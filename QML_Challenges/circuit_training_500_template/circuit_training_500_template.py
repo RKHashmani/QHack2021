@@ -30,21 +30,16 @@ def classify_data(X_train, Y_train, X_test):
 
     # QHACK #
 
-    LAYERS = 2
-    WIRES = 3
-
-
     np.random.seed(0)
 
     num_classes = 3
     margin = 0.15
     feature_size = 3
     batch_size = 10
-    lr_adam = 0.01
-    train_split = 0.75
+
     # the number of the required qubits is calculated from the number of features
     num_qubits = int(np.ceil(np.log2(feature_size)))
-    num_layers = 6
+    num_layers = 2
     total_iterations = 100
 
     dev = qml.device("default.qubit", wires=num_qubits)
@@ -97,7 +92,7 @@ def classify_data(X_train, Y_train, X_test):
                         q_circuits[j], (all_params[0][j], all_params[1][j]), feature_vec
                     )
                     s_j = s_j
-                    li += np.amax([0, s_j - s_true + margin])
+                    li += np.amax([0, s_j - s_true + margin]) # Maybe change to simple max
             loss += li
 
         return loss / num_samples
@@ -128,83 +123,53 @@ def classify_data(X_train, Y_train, X_test):
 
 
 
-
-
-
-    # Minimize the circuit
-    def variational_circuit(inputs, params):
-        parameters = params.reshape((LAYERS, WIRES, 3))
-        qml.templates.embeddings.AngleEmbedding(inputs, wires=[0, 1, 2], rotation='Y')
-        qml.templates.StronglyEntanglingLayers(parameters, wires=range(WIRES))
-        return qml.expval(qml.PauliZ(0))
-
-
-
-    circuit = qml.QNode(variational_circuit, dev)
-
-    def square_loss(labels, predictions):
-        loss = 0
-        for l, p in zip(labels, predictions):
-            loss = loss + (l - p) ** 2
-
-        loss = loss / len(labels)
-        return loss
-
-    def cost(params, X_train, Y_train):
-        predictions = [circuit(x, params) for x in X_train ]
-        return square_loss(Y_train, predictions)
-
-    opt = qml.AdamOptimizer(stepsize=0.1)
-
-    steps = 90
-    conv_tolerance = 0.01
-
-    training_params= np.random.rand((LAYERS * WIRES * 3))
-
-
-
-
-
     all_weights = [
         (0.1 * np.random.rand(num_layers, num_qubits, 3))
         for i in range(num_classes)
     ]
     all_bias = [(0.1 * np.ones(1)) for i in range(num_classes)]
 
-    params = (all_weights, all_bias)
+    training_params = (all_weights, all_bias)
     q_circuits = qnodes
 
     Y_train += 1  # To change labels to 0, 1, 2
 
-    pred = classify(q_circuits, params, X_test)
-
-    pred = [x - 1 for x in pred]  # To get original label
-
-    print (pred)
-
-
-    curr_cost = multiclass_svm_loss(q_circuits, params, X_train, Y_train)
-    print(curr_cost)
 
 
 
+    #  curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
+    #  print(curr_cost)
 
+    opt = qml.AdamOptimizer(stepsize=0.2)
 
+    steps = 20
+    conv_tolerance = 0.001
 
     for i in range (steps):
-        training_params, prev_cost = opt.step_and_cost(lambda v: cost(v, X_train, Y_train), training_params)
+        training_params, prev_cost = opt.step_and_cost(lambda v: multiclass_svm_loss(q_circuits, v, X_train, Y_train), training_params)
 
-        curr_cost = cost(training_params, X_train, Y_train)
+        curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
 
         conv = np.abs(curr_cost - prev_cost)
+        print (conv)
 
         if (i + 1) % 2 == 0:
-            print("Cost after step {:5d}: {: .7f}".format(i + 1, curr_cost))
+            print("Cost after step {:5d}: {: .7f}".format(i + 1, curr_cost[0]))
+
+        if (i + 1) % 10 == 0:
+            pred = classify(q_circuits, training_params, X_test)
+            pred = [x - 1 for x in pred]  # To get original label
+            print (pred)
 
         if conv <= conv_tolerance:
             break
 
-    predictions = classify(q_circuits, training_params, X_test)
+    # To check Predictions. Move elsewhere.
+    pred = classify(q_circuits, training_params, X_test)
+    pred = [x - 1 for x in pred]  # To get original label
+    print (pred)
+
+    predictions = pred
 
     # QHACK #
 
