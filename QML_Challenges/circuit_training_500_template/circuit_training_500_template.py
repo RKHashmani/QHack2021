@@ -92,7 +92,8 @@ def classify_data(X_train, Y_train, X_test):
                         q_circuits[j], (all_params[0][j], all_params[1][j]), feature_vec
                     )
                     s_j = s_j
-                    li += np.amax([0, s_j - s_true + margin]) # Maybe change to simple max
+                    # li += np.amax([0, s_j - s_true + margin]) # Maybe change to simple max
+                    li += max(0, s_j - s_true + margin)
             loss += li
 
         return loss / num_samples
@@ -111,13 +112,6 @@ def classify_data(X_train, Y_train, X_test):
             predicted_labels.append(pred_class)
         return predicted_labels
 
-    def accuracy(labels, hard_predictions):
-        loss = 0
-        for l, p in zip(labels, hard_predictions):
-            if np.abs(l - p) < 1e-5:
-                loss = loss + 1
-        loss = loss / labels.shape[0]
-        return loss
 
 
 
@@ -140,7 +134,7 @@ def classify_data(X_train, Y_train, X_test):
     #  curr_cost = multiclass_svm_loss(q_circuits, training_params, X_train, Y_train)
     #  print(curr_cost)
 
-    opt = qml.AdamOptimizer(stepsize=0.2)
+    opt = qml.AdamOptimizer(stepsize=0.1)
 
     steps = 20
     conv_tolerance = 0.001
