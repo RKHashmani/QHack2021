@@ -10,6 +10,7 @@ class SimpleNet(nn.Module):
 
     self.conv1 = nn.Conv2d(1, 5, kernel_size=5)
     self.AdaptPoolQuan = nn.AdaptiveMaxPool2d(5)
+    self.CConv = nn.Conv2d(5, 4, kernel_size=2)
 
     self.conv2 = nn.Conv2d(4, 20, kernel_size=3)
     self.conv3 = nn.Conv2d(20, 40, kernel_size=2)
@@ -22,6 +23,7 @@ class SimpleNet(nn.Module):
 
     n_qubits = 4
     dev = qml.device("default.qubit", wires=n_qubits)
+    dev1 = qml.device("default.qubit", wires=n_qubits)
     #dev = qml.device("qulacs.simulator", wires=n_qubits)
 
     @qml.qnode(dev)
@@ -30,8 +32,21 @@ class SimpleNet(nn.Module):
         qml.templates.StronglyEntanglingLayers(weights, wires=range(n_qubits))
         return [qml.expval(qml.PauliZ(i)) for i in range(n_qubits)]
 
+    @qml.qnode(dev1)
+    def circuit(inputs, weights):
+      for j in range(n_qubits):
+        qml.RY(np.pi * inputs[j], wires=j)
+
+      qml.templates.RandomLayers(weights, wires=list(range(n_qubits)))
+
+      return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
+
     weight_shapes = {"weights": (3, n_qubits, 3)}
-    self.qlayer = qml.qnn.TorchLayer(qnode, weight_shapes)
+    # self.qlayer = qml.qnn.TorchLayer(qnode, weight_shapes)  # Cenks
+
+    n_layers = 1
+    rand_params = {"weights": (n_layers, 4)}
+    self.qlayer = qml.qnn.TorchLayer(circuit, rand_params)
 
   def qconv(self, x):
     def flatten(t):
@@ -54,7 +69,10 @@ class SimpleNet(nn.Module):
   def forward(self, x):
 
     x = self.AdaptPoolQuan(self.relu(self.conv1(x)))
-    x = self.sigmoid(self.qconv(x))   
+
+    x = self.sigmoid(self.qconv(x))
+    #x = self.sigmoid(self.CConv(x))
+
     x = self.relu(self.conv2(x))
     x = self.AdaptPool(self.relu(self.conv3(x))) # The output shape will always be 40*4*4 = 640.
     x = x.view(-1, 640)

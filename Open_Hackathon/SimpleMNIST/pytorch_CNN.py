@@ -55,6 +55,7 @@ optimizer = torch.optim.Adam( net.parameters(), lr=1.e-3)
 num_epochs = 2
 num_iters_per_epoch = 10 # use only 5K iterations
 
+print("Beginning Training")
 start_time = time.time()
 
 for epoch in range(num_epochs):
@@ -81,14 +82,18 @@ print("---Training took %s seconds ---" % (train_time - start_time))
 # Testing
 correct = 0
 total = 0
-for images,labels in test_loader:
-  images = images.to(device)
-  labels = labels.to(device)
+num_samples = 1000
+for i ,(images,labels) in enumerate(train_loader):
+    print ("Sample No:", i)
+    if i == num_samples:
+        break
+    images = images.to(device)
+    labels = labels.to(device)
 
-  out = net(images)
-  _, predicted_labels = torch.max(out,1)
-  correct += (predicted_labels == labels).sum()
-  total += labels.size(0)
+    out = net(images)
+    _, predicted_labels = torch.max(out,1)
+    correct += (predicted_labels == labels).sum()
+    total += labels.size(0)
 
 print('Percent correct: %.3f'%((100.0*correct)/(total+1)))
 
