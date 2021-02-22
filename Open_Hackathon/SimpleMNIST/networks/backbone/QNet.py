@@ -22,10 +22,9 @@ class SimpleNet(nn.Module):
     self.sigmoid = nn.Sigmoid()
 
     n_qubits = 4
-    dev = qml.device("default.qubit", wires=n_qubits)
     dev1 = qml.device("default.qubit", wires=n_qubits)
-    #dev = qml.device("qulacs.simulator", wires=n_qubits)
 
+    dev = qml.device("default.qubit", wires=n_qubits)
     @qml.qnode(dev)
     def qnode(inputs, weights):
         qml.templates.AngleEmbedding(inputs, wires=range(n_qubits))
@@ -36,17 +35,15 @@ class SimpleNet(nn.Module):
     def circuit(inputs, weights):
       for j in range(n_qubits):
         qml.RY(np.pi * inputs[j], wires=j)
-
       qml.templates.RandomLayers(weights, wires=list(range(n_qubits)))
-
       return [qml.expval(qml.PauliZ(j)) for j in range(n_qubits)]
 
     weight_shapes = {"weights": (3, n_qubits, 3)}
     # self.qlayer = qml.qnn.TorchLayer(qnode, weight_shapes)  # Cenks
 
-    n_layers = 1
-    rand_params = {"weights": (n_layers, 4)}
-    self.qlayer = qml.qnn.TorchLayer(circuit, rand_params)
+    n_layers = 2
+    params = {"weights": (n_layers, 4)}
+    self.qlayer = qml.qnn.TorchLayer(circuit, params)
 
   def qconv(self, x):
     def flatten(t):
