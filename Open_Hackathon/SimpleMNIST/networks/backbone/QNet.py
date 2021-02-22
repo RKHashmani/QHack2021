@@ -2,13 +2,15 @@ import torch.nn as nn
 import torch
 import pennylane as qml
 from pennylane import numpy as np
-import pennylane_qulacs
+# import pennylane_qulacs
 
 class SimpleNet(nn.Module):
   def __init__(self):
     super(SimpleNet, self).__init__()
-    
-    #self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
+
+    self.conv1 = nn.Conv2d(1, 5, kernel_size=5)
+    self.AdaptPoolQuan = nn.AdaptiveMaxPool2d(5)
+
     self.conv2 = nn.Conv2d(4, 20, kernel_size=5)
     self.conv3 = nn.Conv2d(20, 40, kernel_size=3)
     self.pool = nn.MaxPool2d(2)
@@ -19,8 +21,8 @@ class SimpleNet(nn.Module):
     self.sigmoid = nn.Sigmoid()
 
     n_qubits = 4
-    #dev = qml.device("default.qubit", wires=n_qubits)
-    dev = qml.device("qulacs.simulator", wires=n_qubits)
+    dev = qml.device("default.qubit", wires=n_qubits)
+    #dev = qml.device("qulacs.simulator", wires=n_qubits)
 
     @qml.qnode(dev)
     def qnode(inputs, weights):
@@ -53,8 +55,10 @@ class SimpleNet(nn.Module):
 
   def forward(self, x):
 
-    #x = self.pool(self.relu(self.conv1(q_out))) 
+    x = self.AdaptPoolQuan(self.relu(self.conv1(x)))
+
     x = self.pool(self.sigmoid(self.qconv(x)))       
+
     x = self.pool(self.relu(self.conv2(x)))
     x = self.AdaptPool(self.relu(self.conv3(x))) # The output shape will always be 40*4*4 = 640.
     x = x.view(-1, 640)
