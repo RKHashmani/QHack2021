@@ -76,4 +76,4 @@ for images,labels in test_loader:
   correct += (predicted_labels == labels).sum()
   total += labels.size(0)
 
-print('Percent correct: %.3f'%((100.0*correct)/(total+1)))
+  print('Percent correct: %.3f'%((100.0*correct)/(total+1)))

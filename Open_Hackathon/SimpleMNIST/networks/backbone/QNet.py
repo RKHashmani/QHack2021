@@ -11,8 +11,8 @@ class SimpleNet(nn.Module):
     self.conv1 = nn.Conv2d(1, 5, kernel_size=5)
     self.AdaptPoolQuan = nn.AdaptiveMaxPool2d(5)
 
-    self.conv2 = nn.Conv2d(4, 20, kernel_size=5)
-    self.conv3 = nn.Conv2d(20, 40, kernel_size=3)
+    self.conv2 = nn.Conv2d(4, 20, kernel_size=3)
+    self.conv3 = nn.Conv2d(20, 40, kernel_size=2)
     self.pool = nn.MaxPool2d(2)
     self.AdaptPool = nn.AdaptiveMaxPool2d(4)
     self.fc1 = nn.Linear(640, 64)
@@ -42,24 +42,20 @@ class SimpleNet(nn.Module):
     s = 2 # kernel_size
     f = 4 # depth
     #q_out = torch.zeros(1,f,x.shape[3]-s+1, x.shape[3]-s+1)
-    q_input = torch.zeros((x.shape[3]-s+1)**2, s**2)
+    q_out = torch.zeros((x.shape[3]-s+1),(x.shape[3]-s+1), s**2)
     count = 0
     for idx in range(x.shape[3]-s+1):
       for idy in range(x.shape[3]-s+1):
-        q_input[count] = flatten(x[0,0,idx:idx+s,idy:idy+s])
-        count +=1
+        for idz in range(x.shape[2]):
+          q_out[idx,idy] += self.qlayer(flatten(x[0,idz,idx:idx+s,idy:idy+s]))
 
-    q_out = torch.reshape(self.qlayer(q_input), (1,f,x.shape[3]-s+1,x.shape[3]-s+1))
-    
-    return q_out
+    return torch.reshape(q_out, (1,f,x.shape[3]-s+1,x.shape[3]-s+1))
 
   def forward(self, x):
 
     x = self.AdaptPoolQuan(self.relu(self.conv1(x)))
-
-    x = self.pool(self.sigmoid(self.qconv(x)))       
-
-    x = self.pool(self.relu(self.conv2(x)))
+    x = self.sigmoid(self.qconv(x))   
+    x = self.relu(self.conv2(x))
     x = self.AdaptPool(self.relu(self.conv3(x))) # The output shape will always be 40*4*4 = 640.
     x = x.view(-1, 640)
     x = self.relu(self.fc1(x))
