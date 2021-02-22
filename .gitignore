@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 .DS_Store
 .idea/
-Open_Hackathon/SimpleMNIST/
+Open_Hackathon/SimpleMNIST/data
