@@ -84,7 +84,8 @@ correct = 0
 total = 0
 num_samples = 1000
 for i ,(images,labels) in enumerate(train_loader):
-    if i % 10 == 9:
+
+    if (i + 1) % (num_samples // 10) == 0:
         print ("Sample No:", i)
     if i == num_samples:
         break
