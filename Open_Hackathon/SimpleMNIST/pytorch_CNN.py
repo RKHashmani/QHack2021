@@ -8,7 +8,9 @@ import torchvision.transforms as transforms
 from networks.backbone.QNet import SimpleNet
 
 # Define the "device". If GPU is available, device is set to use it, otherwise CPU will be used. 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cpu')
+
 
 # To randomly transform the image.
 rand_transform = transforms.Compose([transforms.RandomChoice([

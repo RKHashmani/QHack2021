@@ -15,6 +15,7 @@ class SimpleNet(nn.Module):
     self.fc1 = nn.Linear(640, 64)
     self.fc2 = nn.Linear(64, 10)
     self.relu = nn.ReLU()
+    self.sigmoid = nn.Sigmoid()
 
     n_qubits = 4
     dev = qml.device("default.qubit", wires=n_qubits)
