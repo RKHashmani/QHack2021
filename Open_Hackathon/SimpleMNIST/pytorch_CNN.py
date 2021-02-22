@@ -53,7 +53,7 @@ optimizer = torch.optim.Adam( net.parameters(), lr=1.e-3)
 
 # Training
 num_epochs = 2
-num_iters_per_epoch = 10 # use only 5K iterations
+num_iters_per_epoch = 100 # use only 5K iterations
 
 print("Beginning Training")
 start_time = time.time()
