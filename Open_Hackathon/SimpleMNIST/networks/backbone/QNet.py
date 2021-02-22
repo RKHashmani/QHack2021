@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import pennylane as qml
 from pennylane import numpy as np
+import pennylane_qulacs
 
 class SimpleNet(nn.Module):
   def __init__(self):
@@ -18,7 +19,8 @@ class SimpleNet(nn.Module):
     self.sigmoid = nn.Sigmoid()
 
     n_qubits = 4
-    dev = qml.device("default.qubit", wires=n_qubits)
+    #dev = qml.device("default.qubit", wires=n_qubits)
+    dev = qml.device("qulacs.simulator", wires=n_qubits)
 
     @qml.qnode(dev)
     def qnode(inputs, weights):
@@ -37,10 +39,15 @@ class SimpleNet(nn.Module):
 
     s = 2 # kernel_size
     f = 4 # depth
-    q_out = torch.zeros(1,f,x.shape[3]-s+1, x.shape[3]-s+1)
+    #q_out = torch.zeros(1,f,x.shape[3]-s+1, x.shape[3]-s+1)
+    q_input = torch.zeros((x.shape[3]-s+1)**2, s**2)
+    count = 0
     for idx in range(x.shape[3]-s+1):
       for idy in range(x.shape[3]-s+1):
-        q_out[:,:,idx,idy] = self.qlayer(flatten(x[0,0,idx:idx+s,idy:idy+s]))
+        q_input[count] = flatten(x[0,0,idx:idx+s,idy:idy+s])
+        count +=1
+
+    q_out = torch.reshape(self.qlayer(q_input), (1,f,x.shape[3]-s+1,x.shape[3]-s+1))
     
     return q_out
 
