@@ -4,7 +4,8 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 
 # Import the network/backbone to be used
-from networks.backbone.SimpleNet import SimpleNet
+#from networks.backbone.SimpleNet import SimpleNet
+from networks.backbone.QNet import SimpleNet
 
 # Define the "device". If GPU is available, device is set to use it, otherwise CPU will be used. 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
@@ -39,7 +40,7 @@ optimizer = torch.optim.Adam( net.parameters(), lr=1.e-3)
 
 # Training
 num_epochs = 2
-num_iters_per_epoch = 5000 # use only 5K iterations
+num_iters_per_epoch = 10 # use only 5K iterations
 
 for epoch in range(num_epochs):
   for i ,(images,labels) in enumerate(train_loader):
@@ -72,4 +73,4 @@ for images,labels in test_loader:
   correct += (predicted_labels == labels).sum()
   total += labels.size(0)
 
-print('Percent correct: %.3f %%' %((100*correct)/(total+1)))
+print('Percent correct: %.3f'%((100.0*correct)/(total+1)))
