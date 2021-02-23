@@ -6,8 +6,8 @@ import time
 
 # Import the network/backbone to be used
 # from networks.backbone.SimpleNet import SimpleNet
-from networks.backbone.QNet import SimpleNet
-# from networks.backbone.QNetFloq import SimpleNet
+# from networks.backbone.QNet import SimpleNet
+from networks.backbone.QuanvNet import SimpleNet
 
 # Define the "device". If GPU is available, device is set to use it, otherwise CPU will be used. 
 #device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
