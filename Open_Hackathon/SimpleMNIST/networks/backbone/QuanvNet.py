@@ -4,7 +4,7 @@ import pennylane as qml
 from pennylane import numpy as np
 # import pennylane_qulacs
 
-from networks.backbone.CustomLayers.FlexibleQuanvLayer import Quanv
+from networks.backbone.CustomLayers.FlexibleQuanvLayer_cenk import Quanv
 
 
 class SimpleNet(nn.Module):
@@ -18,7 +18,7 @@ class SimpleNet(nn.Module):
         self.convALT = nn.Conv2d(5, 4, kernel_size=2) # Acts like the Quanv Layer
 
         # Quanvolution Layer
-        self.Quanv1 = Quanv(2, 4, 1)
+        self.Quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
         self.AdaptPool = nn.AdaptiveMaxPool2d(3)
 
         # Fully Connected Layers
