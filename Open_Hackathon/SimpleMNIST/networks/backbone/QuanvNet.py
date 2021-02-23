@@ -13,8 +13,9 @@ class SimpleNet(nn.Module):
 
         self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
         self.conv2 = nn.Conv2d(10, 20, kernel_size=3)
+        self.conv3 = nn.Conv2d(20, 5, kernel_size=1)
 
-        self.convALT = nn.Conv2d(20, 4, kernel_size=2)
+        self.convALT = nn.Conv2d(5, 4, kernel_size=2)
 
         self.Quanv1 = Quanv(2, 4, 1)
         self.AdaptPool = nn.AdaptiveMaxPool2d(3)
@@ -30,6 +31,7 @@ class SimpleNet(nn.Module):
     def forward(self, x):
         x = self.pool(self.relu(self.conv1(x)))
         x = self.pool(self.relu(self.conv2(x)))
+        x = self.relu(self.conv3(x))
         # x = self.sigmoid(self.convALT(x))
         x = self.sigmoid(self.Quanv1(x))
         x = self.AdaptPool(x)

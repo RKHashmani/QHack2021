@@ -25,7 +25,7 @@ class SimpleNet(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
-        self.Quanv = Quanv(3, 9, 1)
+        self.Quanv = Quanv(2, 4, 1)
 
     def forward(self, x):
         x = self.AdaptPoolQuan(self.relu(self.conv1(x)))
