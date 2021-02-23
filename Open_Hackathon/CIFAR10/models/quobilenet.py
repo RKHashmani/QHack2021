@@ -6,6 +6,7 @@ Mobile Networks for Classification, Detection and Segmentation" for more details
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from models.CustomLayers import *
 
 
 class Block(nn.Module):
@@ -15,6 +16,7 @@ class Block(nn.Module):
         self.stride = stride
 
         planes = expansion * in_planes
+        self.quonv = Quanv(1, planes)
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, groups=planes, bias=False)
