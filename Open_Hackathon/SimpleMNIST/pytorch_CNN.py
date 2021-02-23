@@ -49,8 +49,8 @@ loss_fun = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=1.e-3)
 
 # Training
-num_epochs = 2
-num_iters_per_epoch = 100  # use only 5K iterations
+num_epochs = 5
+num_iters_per_epoch = 5000  # use only 5K iterations
 
 print("Beginning Training")
 start_time = time.time()
@@ -80,6 +80,7 @@ for epoch in range(num_epochs):
         'optimizer': optimizer.state_dict()
     }
     torch.save(state, 'saved_models/QuanvNet-epoch_{}.pt'.format(epoch + 1))
+    print("---Epoch Time: %s seconds ---" % (time.time() - start_time))
 
 train_time = time.time()
 print("---Training took %s seconds ---" % (train_time - start_time))
@@ -92,8 +93,8 @@ for i, (images, labels) in enumerate(train_loader):
 
     if (i + 1) % (num_samples // 10) == 0:
         print("Sample No:", i)
-    if i == num_samples:
-        break
+    # if i == num_samples:
+    #     break
     images = images.to(device)
     labels = labels.to(device)
 
