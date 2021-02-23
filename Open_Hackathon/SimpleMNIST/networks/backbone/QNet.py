@@ -4,7 +4,7 @@ import pennylane as qml
 from pennylane import numpy as np
 # import pennylane_qulacs
 
-from networks.backbone.CustomLayers.QuanvLayer import Quanv
+from networks.backbone.CustomLayers.FlexibleQuanvLayer import Quanv
 
 
 class SimpleNet(nn.Module):
@@ -25,7 +25,7 @@ class SimpleNet(nn.Module):
         self.relu = nn.ReLU()
         self.sigmoid = nn.Sigmoid()
 
-        self.Quanv = Quanv(4, 1, 2, 4)
+        self.Quanv = Quanv(3, 9, 1)
 
     def forward(self, x):
         x = self.AdaptPoolQuan(self.relu(self.conv1(x)))
