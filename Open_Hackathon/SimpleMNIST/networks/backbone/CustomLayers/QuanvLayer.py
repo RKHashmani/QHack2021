@@ -9,8 +9,8 @@ class Quanv(nn.Module):
         super().__init__()
 
         self.n_qubits = n_qubits
-        dev = qml.device("default.qubit", wires=n_qubits)
 
+        dev = qml.device("default.qubit", wires=n_qubits)
         @qml.qnode(dev)
         def circuit(inputs, weights):
             for j in range(n_qubits):
