@@ -71,6 +71,7 @@ net = MobileNetV2()
 # net = SimpleDLA()
 net = net.to(device)
 if device == 'cuda':
+    print ("GPU Use Enabled")
     net = torch.nn.DataParallel(net)
     cudnn.benchmark = True
 
@@ -85,7 +86,7 @@ if args.resume:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
-                      momentum=0.9, weight_decay=5e-4)
+                      momentum=0.9, weight_decay=4e-5)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
@@ -148,7 +149,7 @@ def test(epoch):
         best_acc = acc
 
 
-for epoch in range(start_epoch, start_epoch+200):
+for epoch in range(start_epoch, start_epoch+350):
     train(epoch)
     test(epoch)
     scheduler.step()
