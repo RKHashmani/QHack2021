@@ -5,9 +5,9 @@ import torchvision.transforms as transforms
 import time, os
 
 # Import the network/backbone to be used
-from networks.backbone.SimpleNet import SimpleNet
+# from networks.backbone.SimpleNet import SimpleNet
 # from networks.backbone.QNet import SimpleNet
-#from networks.backbone.QuanvNet import SimpleNet
+from networks.backbone.QuanvNet import SimpleNet
 
 def test():
     # Testing
@@ -37,7 +37,7 @@ def test():
 
     avg_loss = avg_loss / num_samples 
 
-    with open('log_validation.csv', 'a') as f:
+    with open('log_validation_2_layer.csv', 'a') as f:
         f.write('%.4f, %.4f\n' %((100.0 * correct) / (total + 1), avg_loss))
 
     print('Percent correct: %.3f' % ((100.0 * correct) / (total + 1)))
@@ -93,7 +93,7 @@ print("Beginning Training")
 start_time = time.time()
 
 try:
-    os.remove('log_validation_classic.csv')
+    os.remove('log_validation_2_layer.csv')
 except OSError:
     pass
 
