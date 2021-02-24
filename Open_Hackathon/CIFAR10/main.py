@@ -13,6 +13,7 @@ import argparse
 
 from models import *
 from utils import progress_bar
+from utils import load_custom_state_dict
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
@@ -72,7 +73,7 @@ if args.resume:
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
     checkpoint = torch.load('./checkpoint/ckpt.pth')
-    net.load_state_dict(checkpoint['net'])
+    load_custom_state_dict(net, checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
 
