@@ -9,6 +9,31 @@ import time
 # from networks.backbone.QNet import SimpleNet
 from networks.backbone.QuanvNet import SimpleNet
 
+def test():
+    # Testing
+    t0 = time.time()
+    correct = 0
+    total = 0
+    num_samples = 100
+    for i, (images, labels) in enumerate(train_loader):
+        if i == num_samples:
+            break
+
+        images = images.to(device)
+        labels = labels.to(device)
+
+        out = net(images)
+        _, predicted_labels = torch.max(out, 1)
+        loss = loss_fun(out, labels)
+        correct += (predicted_labels == labels).sum()
+        total += labels.size(0)
+
+    print('Percent correct: %.3f' % ((100.0 * correct) / (total + 1)))
+
+    print('Loss: %.4f' %loss.item())
+
+    print("---Testing took %s seconds ---" % (time.time() - t0))
+
 # Define the "device". If GPU is available, device is set to use it, otherwise CPU will be used. 
 # device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
@@ -42,24 +67,25 @@ test_loader = torch.utils.data.DataLoader(dataset=test_data, batch_size=batch_si
 
 # Loading the model
 net = SimpleNet().to(device)
-print(net)
+#print(net)
 
 # Preparation for training
 loss_fun = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=1.e-3)
 
 # Training
-num_epochs = 2
+num_epochs = 1
 num_iters_per_epoch = 100  # use only 5K iterations
 
 print("Beginning Training")
 start_time = time.time()
 
+test()
+
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
         if i == num_iters_per_epoch:
             break
-
         images = images.to(device)
         labels = labels.to(device)
 
@@ -68,6 +94,9 @@ for epoch in range(num_epochs):
         loss = loss_fun(output, labels)
         loss.backward()
         optimizer.step()
+
+        if (i+1)%20==0:
+            test()
 
         if (i + 1) % (num_iters_per_epoch // 10) == 0:
             print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
@@ -85,24 +114,4 @@ for epoch in range(num_epochs):
 train_time = time.time()
 print("---Training took %s seconds ---" % (train_time - start_time))
 
-# Testing
-correct = 0
-total = 0
-num_samples = 100
-for i, (images, labels) in enumerate(train_loader):
 
-    if (i + 1) % (num_samples // 10) == 0:
-        print("Sample No:", i)
-    if i == num_samples:
-        break
-    images = images.to(device)
-    labels = labels.to(device)
-
-    out = net(images)
-    _, predicted_labels = torch.max(out, 1)
-    correct += (predicted_labels == labels).sum()
-    total += labels.size(0)
-
-print('Percent correct: %.3f' % ((100.0 * correct) / (total + 1)))
-
-print("---Testing took %s seconds ---" % (time.time() - train_time))
