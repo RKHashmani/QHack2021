@@ -44,7 +44,7 @@ class Quanv(nn.Module):
             # Apply Hadamard to rest of the qubits, if there are less inputs then n_qubits
             # Hadamard is applied to kill the preference of starting from 0.
             for j in range(self.n_qubits - inputs.shape[0]):
-                qml.Hadamard(wires=j+input.shape[0])
+                qml.Hadamard(wires=j+inputs.shape[0])
             # Random Layers is generally bad, they don't train good.
             # We can use Entangling Layers, or our own layers, or layers that we can run on real hardware :)
             #qml.templates.RandomLayers(weights, wires=list(range(self.n_qubits)))
