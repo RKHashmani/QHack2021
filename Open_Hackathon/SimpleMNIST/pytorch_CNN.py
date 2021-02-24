@@ -93,7 +93,7 @@ print("Beginning Training")
 start_time = time.time()
 
 try:
-    os.remove('log_validation.csv')
+    os.remove('log_validation_classic.csv')
 except OSError:
     pass
 
