@@ -14,7 +14,8 @@ def test():
     t0 = time.time()
     correct = 0
     total = 0
-    num_samples = 100
+    avg_loss = 0 
+    num_samples = 1000
     for i, (images, labels) in enumerate(train_loader):
         if i == num_samples:
             break
@@ -25,12 +26,18 @@ def test():
         out = net(images)
         _, predicted_labels = torch.max(out, 1)
         loss = loss_fun(out, labels)
+        avg_loss += loss.item()
         correct += (predicted_labels == labels).sum()
         total += labels.size(0)
 
+    avg_loss = avg_loss / num_samples 
+
+    with open('log_validation.csv', 'w') as f:
+        f.write('%.4f, %.4f\n' %((100.0 * correct) / (total + 1), avg_loss))
+
     print('Percent correct: %.3f' % ((100.0 * correct) / (total + 1)))
 
-    print('Loss: %.4f' %loss.item())
+    print('Loss: %.4f' %avg_loss)
 
     print("---Testing took %s seconds ---" % (time.time() - t0))
 
@@ -74,9 +81,9 @@ loss_fun = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=1.e-3)
 
 # Training
-num_epochs = 1
-num_iters_per_epoch = 100  # use only 5K iterations
-
+num_epochs = 10
+num_iters_per_epoch = 1000  # use only 5K iterations
+N_TEST = 5
 print("Beginning Training")
 start_time = time.time()
 
@@ -91,16 +98,17 @@ for epoch in range(num_epochs):
 
         optimizer.zero_grad()
         output = net(images)
+
         loss = loss_fun(output, labels)
         loss.backward()
         optimizer.step()
 
-        if (i+1)%20==0:
+        if (i+1)%(num_iters_per_epoch//N_TEST)==0:
             test()
 
         if (i + 1) % (num_iters_per_epoch // 10) == 0:
-            print('Epoch [%d/%d], Step [%d/%d], Loss: %.4f'
-                  % (epoch + 1, num_epochs, i + 1, num_iters_per_epoch, loss.item()))
+            print('Epoch [%d/%d], Step [%d/%d]'
+                  % (epoch + 1, num_epochs, i + 1, num_iters_per_epoch))
 
     print("Saving Checkpoint for Epoch", epoch + 1)
     state = {
