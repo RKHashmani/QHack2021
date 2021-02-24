@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 import pennylane as qml
 from pennylane import numpy as np
+from models.CustomLayers import remote_cirq
 
 
 class Quanv(nn.Module):
@@ -24,7 +25,18 @@ class Quanv(nn.Module):
 
         self.circuit_layers = circuit_layers # circuit layers
 
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        if 26 <= self.n_qubits <= 32:  # If it meets the requirement for Floq, use it.
+            API_KEY = "AIzaSyCyEpDpnnBO5Z1BaPWMCRyzFC_9redBQ4Q"
+            sim = remote_cirq.RemoteSimulator(API_KEY)
+
+            dev = qml.device("cirq.simulator",
+                             wires=self.n_qubits,
+                             simulator=sim,
+                             analytic=False)
+        else:
+            dev = qml.device("default.qubit", wires=self.n_qubits)
+
+
         @qml.qnode(dev)
         def circuit(inputs, weights):
             for j in range(inputs.shape[0]):
