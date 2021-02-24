@@ -16,7 +16,6 @@ class Block(nn.Module):
         self.stride = stride
 
         planes = expansion * in_planes
-        self.quonv = Quanv(1, planes)
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, stride=1, padding=0, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=stride, padding=1, groups=planes, bias=False)
@@ -52,6 +51,7 @@ class QuobileNet(nn.Module):
     def __init__(self, num_classes=10):
         super(QuobileNet, self).__init__()
         # NOTE: change conv1 stride 2 -> 1 for CIFAR10
+        self.quanv = Quanv(3, 32)
         self.conv1 = nn.Conv2d(3, 32, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(32)
         self.layers = self._make_layers(in_planes=32)
