@@ -1,1 +1,1 @@
-from .FlexibleQuanvLayer_cenk import Quanv
+from .QuanvLayer import Quanv
