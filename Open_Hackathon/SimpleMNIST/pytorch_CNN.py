@@ -92,7 +92,11 @@ N_TEST = 5
 print("Beginning Training")
 start_time = time.time()
 
-os.remove('log_validation.csv')
+try:
+    os.remove('log_validation.csv')
+except OSError:
+    pass
+
 test()
 
 for epoch in range(num_epochs):
