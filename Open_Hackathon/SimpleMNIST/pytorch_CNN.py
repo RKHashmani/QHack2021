@@ -2,12 +2,12 @@ import torch
 import torch.nn as nn
 import torchvision.datasets as datasets
 import torchvision.transforms as transforms
-import time
+import time, os
 
 # Import the network/backbone to be used
-# from networks.backbone.SimpleNet import SimpleNet
+from networks.backbone.SimpleNet import SimpleNet
 # from networks.backbone.QNet import SimpleNet
-from networks.backbone.QuanvNet import SimpleNet
+#from networks.backbone.QuanvNet import SimpleNet
 
 def test():
     # Testing
@@ -19,20 +19,25 @@ def test():
     for i, (images, labels) in enumerate(train_loader):
         if i == num_samples:
             break
-
+    
         images = images.to(device)
         labels = labels.to(device)
 
+        if labels.item()==6:
+            labels = torch.tensor([1])
+        if labels.item()==9:
+            labels = torch.tensor([2])
+
         out = net(images)
         _, predicted_labels = torch.max(out, 1)
-        loss = loss_fun(out, labels)
+        loss = loss_fun(out, labels).to(device)
         avg_loss += loss.item()
         correct += (predicted_labels == labels).sum()
         total += labels.size(0)
 
     avg_loss = avg_loss / num_samples 
 
-    with open('log_validation.csv', 'w') as f:
+    with open('log_validation.csv', 'a') as f:
         f.write('%.4f, %.4f\n' %((100.0 * correct) / (total + 1), avg_loss))
 
     print('Percent correct: %.3f' % ((100.0 * correct) / (total + 1)))
@@ -42,7 +47,7 @@ def test():
     print("---Testing took %s seconds ---" % (time.time() - t0))
 
 # Define the "device". If GPU is available, device is set to use it, otherwise CPU will be used. 
-# device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+#device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 device = torch.device('cpu')
 
 # To randomly transform the image.
@@ -60,11 +65,11 @@ train_data = datasets.MNIST(root='./data', train=True,
 test_data = datasets.MNIST(root='./data', train=False,
                            transform=rand_transform, download=True)
 
-idx = (train_data.targets == 0) | (train_data.targets == 1) | (train_data.targets == 2)
+idx = (train_data.targets == 0) | (train_data.targets == 6) | (train_data.targets == 9)
 train_data.targets = train_data.targets[idx]
 train_data.data = train_data.data[idx]
 
-idx = (test_data.targets == 0) | (test_data.targets == 1) | (test_data.targets == 2)
+idx = (test_data.targets == 0) | (test_data.targets == 6) | (test_data.targets == 9)
 test_data.targets = test_data.targets[idx]
 test_data.data = test_data.data[idx]
 
@@ -81,12 +86,13 @@ loss_fun = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=1.e-3)
 
 # Training
-num_epochs = 10
+num_epochs = 5
 num_iters_per_epoch = 1000  # use only 5K iterations
 N_TEST = 5
 print("Beginning Training")
 start_time = time.time()
 
+os.remove('log_validation.csv')
 test()
 
 for epoch in range(num_epochs):
@@ -95,11 +101,16 @@ for epoch in range(num_epochs):
             break
         images = images.to(device)
         labels = labels.to(device)
+        
+        if labels.item()==6:
+            labels = torch.tensor([1])
+        if labels.item()==9:
+            labels = torch.tensor([2])
 
         optimizer.zero_grad()
         output = net(images)
 
-        loss = loss_fun(output, labels)
+        loss = loss_fun(output, labels).to(device)
         loss.backward()
         optimizer.step()
 
