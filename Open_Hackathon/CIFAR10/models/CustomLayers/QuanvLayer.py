@@ -59,14 +59,15 @@ class Quanv(nn.Module):
 
 
     def forward(self, x):
-        q_out = torch.zeros((x.shape[3] - self.kernal_size + 1), (x.shape[3] - self.kernal_size + 1), self.f)
-        for idx in range(x.shape[3] - self.kernal_size + 1):
-            for idy in range(x.shape[2] - self.kernal_size + 1):
-                for idz in range(x.shape[1]):
-                    q_out[idx, idy] += self.qlayer(self.flatten(x[0, idz, idx:idx + self.kernal_size, idy:idy + self.kernal_size]))
+        q_out = torch.zeros(x.shape[0], (x.shape[3] - self.kernal_size + 1), (x.shape[3] - self.kernal_size + 1), self.f)
+        for idw in range(x.shape[0]):
+            for idx in range(x.shape[3] - self.kernal_size + 1):
+                for idy in range(x.shape[2] - self.kernal_size + 1):
+                    for idz in range(x.shape[1]):
+                        q_out[idw, idx, idy] += self.qlayer(self.flatten(x[idw, idz, idx:idx + self.kernal_size, idy:idy + self.kernal_size]))
                     
                     
-        return torch.reshape(q_out, (1, self.f, x.shape[3] - self.kernal_size + 1, x.shape[3] - self.kernal_size + 1))
+        return torch.reshape(q_out, (x.shape[0], self.f, x.shape[3] - self.kernal_size + 1, x.shape[3] - self.kernal_size + 1))
 
     def flatten(self, t):
         t = t.reshape(1, -1)
