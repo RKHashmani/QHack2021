@@ -12,12 +12,15 @@ class QuanvNet(nn.Module):
         self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
         self.pool = nn.MaxPool2d(2, stride=2)
         self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(64, 32, kernel_size=3, padding=1)
         # Same Max pool as above
+        self.convPool = nn.Conv2d(32, 16, kernel_size=1)
+        self.QuanvALT1 = nn.Conv2d(16, 8, kernel_size=3)
+        self.QuanvALT2 = nn.Conv2d(8, 4, kernel_size=3)
         # Flatten
         self.dropout = nn.Dropout(0.5)
-        self.fc1 = nn.Linear(4096, 128)
-        self.fc2 = nn.Linear(128, 3)
+        self.fc1 = nn.Linear(64, 32)
+        self.fc2 = nn.Linear(32, 3)
 
         # Quanvolution Layer
         # self.Quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
@@ -38,7 +41,10 @@ class QuanvNet(nn.Module):
         out = self.relu(self.conv3(out))
         out = self.relu(self.conv4(out))
         out = self.pool(out)
-        out = out.view(-1, 4096)
+        out = self.convPool(out)
+        out = self.relu(self.QuanvALT1(out))
+        out = self.relu(self.QuanvALT2(out))
+        out = out.view(-1, 64)
         out = self.dropout(out)
         out = self.relu(self.fc1(out))
         out = self.softmax(self.fc2(out))
