@@ -50,12 +50,11 @@ class QuanvNet(nn.Module):
         out = self.pool(out)
         out = self.convPool(out)
 
-        # out = self.relu(self.QuanvALT1(out))
-        # out = self.relu(self.QuanvALT2(out))
+        out = self.relu(self.QuanvALT1(out))
+        out = self.relu(self.QuanvALT2(out))
 
         # out = self.relu(self.quanv1(out))
-        out = self.relu(self.QuanvALT1(out))
-        out = self.relu(self.quanv2(out))
+        # out = self.relu(self.quanv2(out))
 
         out = out.view(-1, 64)
         out = self.dropout(out)
