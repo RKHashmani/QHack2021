@@ -3,6 +3,7 @@ import torch
 import pennylane as qml
 from pennylane import numpy as np
 from models.CustomLayers import remote_cirq
+import pennylane_qulacs
 
 
 class Quanv(nn.Module):
@@ -36,6 +37,8 @@ class Quanv(nn.Module):
         else:
             dev = qml.device("default.qubit", wires=self.n_qubits)
 
+        dev = qml.device("default.qubit", wires=self.n_qubits)
+        dev = qml.device("qulacs.simulator", wires=self.n_qubits)
 
         @qml.qnode(dev)
         def circuit(inputs, weights):
@@ -57,12 +60,14 @@ class Quanv(nn.Module):
 
     def forward(self, x):
         q_out = torch.zeros((x.shape[3] - self.kernal_size + 1), (x.shape[3] - self.kernal_size + 1), self.f)
-
+        count = 0 
         for idx in range(x.shape[3] - self.kernal_size + 1):
             for idy in range(x.shape[2] - self.kernal_size + 1):
                 for idz in range(x.shape[1]):
+                    print(count)
                     q_out[idx, idy] += self.qlayer(self.flatten(x[0, idz, idx:idx + self.kernal_size, idy:idy + self.kernal_size]))
-
+                    count += 1
+                    
         return torch.reshape(q_out, (1, self.f, x.shape[3] - self.kernal_size + 1, x.shape[3] - self.kernal_size + 1))
 
     def flatten(self, t):

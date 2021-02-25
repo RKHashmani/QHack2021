@@ -1,0 +1,55 @@
+==> Preparing data..
+Files already downloaded and verified
+Files already downloaded and verified
+==> Building model..
+==> Resuming from checkpoint..
+
+Epoch: 223
+Traceback (most recent call last):
+  File "main.py", line 147, in <module>
+    train(epoch)
+  File "main.py", line 97, in train
+    outputs = net(inputs)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/quobilenet.py", line 73, in forward
+    out = F.relu(self.bn1(self.quanv(x)))
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/QuanvLayer.py", line 64, in forward
+    q_out[idx, idy] += self.qlayer(self.flatten(x[0, idz, idx:idx + self.kernal_size, idy:idy + self.kernal_size]))
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/torch/nn/modules/module.py", line 722, in _call_impl
+    result = self.forward(*input, **kwargs)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/qnn/torch.py", line 313, in forward
+    return self._evaluate_qnode(inputs)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/qnn/torch.py", line 327, in _evaluate_qnode
+    return self._evaluate_qnode_tape_mode(x)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/qnn/torch.py", line 356, in _evaluate_qnode_tape_mode
+    return self.qnode(**kwargs).type(x.dtype)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/tape/qnode.py", line 533, in __call__
+    res = self.qtape.execute(device=self.device)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/tape/tapes/tape.py", line 1070, in execute
+    return self._execute(params, device=device)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/tape/interfaces/torch.py", line 175, in _execute
+    res = _TorchInterface.apply(kwargs, *params)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/tape/interfaces/torch.py", line 49, in forward
+    res = tape.execute_device(ctx.args, device)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/tape/tapes/tape.py", line 1101, in execute_device
+    res = device.execute(self)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/_qubit_device.py", line 211, in execute
+    results = self.statistics(circuit.observables)
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane/_qubit_device.py", line 340, in statistics
+    results.append(self.expval(obs))
+  File "/home/ctuysuz/miniconda3/envs/quantum/lib/python3.8/site-packages/pennylane_cirq/simulator_device.py", line 197, in expval
+    return self._simulator.simulate_expectation_values(
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/remote_cirq/base_simulator.py", line 221, in simulate_expectation_values
+    return self.simulate_expectation_values_sweep(
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/remote_cirq/base_simulator.py", line 287, in simulate_expectation_values_sweep
+    self._expectation(
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/remote_cirq/base_simulator.py", line 310, in _expectation
+    result = self.expectation_job_results(job_id)
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/remote_cirq/base_simulator.py", line 315, in expectation_job_results
+    data = self._get_job_results(schemas.JobType.EXPECTATION, job_id)
+  File "/home/ctuysuz/Repos/QHack2021/Open_Hackathon/CIFAR10/models/CustomLayers/remote_cirq/base_simulator.py", line 117, in _get_job_results
+    raise SimulatorError(f'ERROR status returned for JobID: {job_id}'
+models.CustomLayers.remote_cirq.base_simulator.SimulatorError: ERROR status returned for JobID: 7b0a906a-f84d-4731-af6a-000941fd7657 Error message: Simulator internal error occured

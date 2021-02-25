@@ -70,7 +70,9 @@ class QuobileNet(nn.Module):
 
     def forward(self, x):
         # out = F.relu(self.bn1(self.conv1(x)))
+        print('hello')
         out = F.relu(self.bn1(self.quanv(x)))
+        print('hello to you')
         out = self.layers(out)
         out = F.relu(self.bn2(self.conv2(out)))
         # NOTE: change pooling kernel_size 7 -> 4 for CIFAR10

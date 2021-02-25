@@ -1,8 +1,8 @@
 import remote_cirq
 import pennylane as qml
 import numpy as np
-import sys
-wires = 26
+import sys, time
+wires = 32
 np.random.seed(0)
 
 weights = np.random.randn(1, wires, 3)
@@ -20,4 +20,6 @@ def my_circuit(weights):
 	                                              wires=range(wires))
 	return qml.expval(qml.PauliZ(0))
 
+t0 = time.time()
 print(my_circuit(weights))
+print('It took %.4f seconds!'%(time.time()-t0))

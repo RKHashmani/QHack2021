@@ -22,7 +22,8 @@ parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 args = parser.parse_args()
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
+#device = 'cuda' if torch.cuda.is_available() else 'cpu'
+device = 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
@@ -59,8 +60,8 @@ print('==> Building model..')
 # net = ResNet18()
 # net = ResNeXt29_2x64d()
 # net = MobileNet()
-# net = MobileNetV2()
-net = QuobileNet()
+net = MobileNetV2()
+#net = QuobileNet()
 
 net = net.to(device)
 if device == 'cuda':
