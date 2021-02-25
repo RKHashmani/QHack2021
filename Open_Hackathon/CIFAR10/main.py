@@ -60,8 +60,9 @@ print('==> Building model..')
 # net = ResNet18()
 # net = ResNeXt29_2x64d()
 # net = MobileNet()
-net = MobileNetV2()
+#net = MobileNetV2()
 #net = QuobileNet()
+net = SimpleNet()
 
 net = net.to(device)
 if device == 'cuda':

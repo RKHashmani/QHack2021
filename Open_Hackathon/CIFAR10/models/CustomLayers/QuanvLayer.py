@@ -25,7 +25,7 @@ class Quanv(nn.Module):
             self.n_qubits = self.f
 
         self.circuit_layers = circuit_layers # circuit layers
-
+        '''
         if 26 <= self.n_qubits <= 32:  # If it meets the requirement for Floq, use it.
             API_KEY = "AIzaSyCyEpDpnnBO5Z1BaPWMCRyzFC_9redBQ4Q"
             sim = remote_cirq.RemoteSimulator(API_KEY)
@@ -36,8 +36,8 @@ class Quanv(nn.Module):
                              analytic=False)
         else:
             dev = qml.device("default.qubit", wires=self.n_qubits)
-
-        dev = qml.device("default.qubit", wires=self.n_qubits)
+        '''
+        #dev = qml.device("default.qubit", wires=self.n_qubits)
         dev = qml.device("qulacs.simulator", wires=self.n_qubits)
 
         @qml.qnode(dev)
@@ -60,13 +60,11 @@ class Quanv(nn.Module):
 
     def forward(self, x):
         q_out = torch.zeros((x.shape[3] - self.kernal_size + 1), (x.shape[3] - self.kernal_size + 1), self.f)
-        count = 0 
         for idx in range(x.shape[3] - self.kernal_size + 1):
             for idy in range(x.shape[2] - self.kernal_size + 1):
                 for idz in range(x.shape[1]):
-                    print(count)
                     q_out[idx, idy] += self.qlayer(self.flatten(x[0, idz, idx:idx + self.kernal_size, idy:idy + self.kernal_size]))
-                    count += 1
+                    
                     
         return torch.reshape(q_out, (1, self.f, x.shape[3] - self.kernal_size + 1, x.shape[3] - self.kernal_size + 1))
 
