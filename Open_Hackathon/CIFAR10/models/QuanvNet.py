@@ -17,11 +17,11 @@ class QuanvNet(nn.Module):
         self.convPool = nn.Conv2d(32, 16, kernel_size=1)
 
         # Classical Alts to Quanv Layers
-        self.QuanvALT1 = nn.Conv2d(16, 8, kernel_size=3)
-        self.QuanvALT2 = nn.Conv2d(8, 4, kernel_size=3)
+        self.QuanvALT1 = nn.Conv2d(16, 4, kernel_size=3)
+        self.QuanvALT2 = nn.Conv2d(4, 4, kernel_size=3)
 
         # Quanv Layers
-        self.quanv1 = Quanv(kernal_size=3, output_depth=8)
+        self.quanv1 = Quanv(kernal_size=3, output_depth=4)
         self.quanv2 = Quanv(kernal_size=3, output_depth=4)
 
         # Flatten
