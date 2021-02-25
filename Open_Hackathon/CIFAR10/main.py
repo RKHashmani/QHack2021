@@ -89,7 +89,8 @@ print('==> Building model..')
 # net = MobileNet()
 # net = MobileNetV2()
 # net = QuobileNet()
-net = SimpleNet()
+# net = SimpleNet()
+net = QuanvNet()
 
 net = net.to(device)
 if device == 'cuda':
