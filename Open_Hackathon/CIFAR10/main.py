@@ -15,6 +15,8 @@ from models import *
 from utils import progress_bar
 from utils import load_custom_state_dict
 
+import numpy as np
+
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -41,15 +43,40 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
+num_batches = 10
+batch_size = 10
+image_list = list(range(num_batches*batch_size))
+
+# load train set
 trainset = torchvision.datasets.CIFAR10(
     root='./data', train=True, download=True, transform=transform_train)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=1, shuffle=True, num_workers=2)
 
+# select 3 classes
+y = np.array(trainset.targets)
+pos_i = np.argwhere( (y==0) | (y==1) | (y==2))
+pos_i = list(pos_i[:,0])
+trainset.data = [trainset.data[j] for j in pos_i]
+trainset.targets = [trainset.targets[j] for j in pos_i]
+
+# select a subset
+trainset_1 = torch.utils.data.Subset(trainset, image_list)
+# create train loader
+trainloader = torch.utils.data.DataLoader(
+    trainset_1, batch_size=batch_size, shuffle=True, num_workers=2)
+# load test set
 testset = torchvision.datasets.CIFAR10(
     root='./data', train=False, download=True, transform=transform_test)
+# select 3 classes
+y = np.array(testset.targets)
+pos_i = np.argwhere( (y==0) | (y==1) | (y==2))
+pos_i = list(pos_i[:,0])
+testset.data = [testset.data[j] for j in pos_i]
+testset.targets = [testset.targets[j] for j in pos_i]
+# select a subset
+testset_1 = torch.utils.data.Subset(testset, image_list)
+# create test loader
 testloader = torch.utils.data.DataLoader(
-    testset, batch_size=100, shuffle=False, num_workers=2)
+    testset_1, batch_size=batch_size, shuffle=False, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer',
            'dog', 'frog', 'horse', 'ship', 'truck')
@@ -142,7 +169,6 @@ def test(epoch):
             os.mkdir('checkpoint')
         torch.save(state, './checkpoint/ckpt.pth')
         best_acc = acc
-
 
 for epoch in range(start_epoch, start_epoch+350):
     train(epoch)
