@@ -1,40 +1,46 @@
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from models.CustomLayers import *
 
 
-
 class SimpleNet(nn.Module):
     def __init__(self):
         super(SimpleNet, self).__init__()
         # Conv Layers
-        self.conv1 = nn.Conv2d(3, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=3)
-        self.conv3 = nn.Conv2d(20, 5, kernel_size=1)
-        self.convALT = nn.Conv2d(5, 4, kernel_size=2) # Acts like the Quanv Layer
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(32, 32, kernel_size=3, padding=1)
+        self.pool = nn.MaxPool2d(2, stride=2)
+        self.conv3 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
+        self.conv4 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
+        # Same Max pool as above
+        # Flatten
+        self.dropout = nn.Dropout(0.5)
+        self.fc1 = nn.Linear(4096, 128)
+        self.fc2 = nn.Linear(128, 3)
 
         # Quanvolution Layer
-        self.Quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
+        # self.Quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
 
-        # Fully Connected Layers
-        self.fc1 = nn.Linear(36, 12)
-        self.fc2 = nn.Linear(12, 3)
+        # Activation Functions
 
-        self.AdaptPool = nn.AdaptiveMaxPool2d(3)
-        self.pool = nn.MaxPool2d(2)
+        # self.AdaptPool = nn.AdaptiveMaxPool2d(3)
+        self.pool = nn.MaxPool2d(2, stride=2)
         self.relu = nn.ReLU()
-        self.sigmoid = nn.Sigmoid()
+        # self.sigmoid = nn.Sigmoid()
+        self.softmax = nn.Softmax()
 
     def forward(self, x):
-        x = self.pool(self.relu(self.conv1(x)))
-        x = self.pool(self.relu(self.conv2(x)))
-        x = self.relu(self.conv3(x))
-        x = self.sigmoid(self.convALT(x))
-        x = self.sigmoid(self.Quanv1(x))
-        #x = self.AdaptPool(x)
-        x = x.view(-1, 36)
-        x = self.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
+
+        out = self.relu(self.conv1(x))
+        out = self.relu(self.conv2(out))
+        out = self.pool(out)
+        out = self.relu(self.conv3(out))
+        out = self.relu(self.conv4(out))
+        out = self.pool(out)
+        out = out.view(-1, 4096)
+        out = self.dropout(out)
+        out = self.relu(self.fc1(out))
+        out = self.softmax(self.fc2(out),)
+
+        return out
