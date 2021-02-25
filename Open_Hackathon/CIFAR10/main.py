@@ -18,7 +18,7 @@ import numpy as np
 
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
-parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--lr', default=1e-2, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 args = parser.parse_args()
@@ -100,8 +100,8 @@ if device == 'cuda':
 if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
-    assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.pth')
+    assert os.path.isdir('pretrained_models'), 'Error: no checkpoint directory found!'
+    checkpoint = torch.load('./pretrained_models/Classical-epoch.pth')
     load_custom_state_dict(net, checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -110,6 +110,14 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(net.parameters(), lr=args.lr,
                       momentum=0.9, weight_decay=4e-5)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+if not os.path.exists('tools/eval_stats'):
+    os.makedirs('tools/eval_stats')
+
+try:
+    os.remove('tools/eval_stats/log_validation.csv')
+except OSError:
+    pass
 
 
 # Training
@@ -156,7 +164,7 @@ def test(epoch):
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-    with open('log_validation.csv', 'a') as f:
+    with open('tools/eval_stats/log_validation.csv', 'a') as f:
         f.write('%.4f, %.4f\n' %(100.*correct/total, test_loss))
 
     # Save checkpoint.
@@ -168,9 +176,9 @@ def test(epoch):
             'acc': acc,
             'epoch': epoch,
         }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
+        if not os.path.isdir('pretrained_models'):
+            os.mkdir('pretrained_models')
+        torch.save(state, './pretrained_models/Classical-epoch_{}.pth'.format(epoch + 1))
         best_acc = acc
 
 for epoch in range(start_epoch, start_epoch+350):
