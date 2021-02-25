@@ -21,8 +21,8 @@ class QuanvNet(nn.Module):
         self.QuanvALT2 = nn.Conv2d(4, 4, kernel_size=3)
 
         # Quanv Layers
-        self.quanv1 = Quanv(kernal_size=3, output_depth=4)
-        self.quanv2 = Quanv(kernal_size=3, output_depth=4)
+        self.quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
+        self.quanv2 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
 
         # Flatten
         self.dropout = nn.Dropout(0.5)
@@ -51,10 +51,10 @@ class QuanvNet(nn.Module):
         out = self.convPool(out)
 
         out = self.relu(self.QuanvALT1(out))
-        out = self.relu(self.QuanvALT2(out))
+        # out = self.relu(self.QuanvALT2(out))
 
         # out = self.relu(self.quanv1(out))
-        # out = self.relu(self.quanv2(out))
+        out = self.relu(self.quanv2(out))
 
         out = out.view(-1, 64)
         out = self.dropout(out)
