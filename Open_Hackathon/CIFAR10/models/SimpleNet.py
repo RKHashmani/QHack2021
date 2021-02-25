@@ -28,7 +28,7 @@ class SimpleNet(nn.Module):
         self.pool = nn.MaxPool2d(2, stride=2)
         self.relu = nn.ReLU()
         # self.sigmoid = nn.Sigmoid()
-        self.softmax = nn.Softmax()
+        self.softmax = nn.Softmax(1)
 
     def forward(self, x):
 
@@ -41,6 +41,6 @@ class SimpleNet(nn.Module):
         out = out.view(-1, 4096)
         out = self.dropout(out)
         out = self.relu(self.fc1(out))
-        out = self.softmax(self.fc2(out),)
+        out = self.softmax(self.fc2(out))
 
         return out
