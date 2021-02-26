@@ -43,7 +43,7 @@ transform_test = transforms.Compose([
 ])
 
 num_batches = 10
-batch_size = 10
+batch_size = 100
 image_list = list(range(num_batches*batch_size))
 
 # load train set
@@ -101,7 +101,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('pretrained_models'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./pretrained_models/Classical-epoch.pth')
+    checkpoint = torch.load('./pretrained_models/Classical_1_layer_depth_1-epoch_274.pth')
     load_custom_state_dict(net, checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
@@ -115,7 +115,7 @@ if not os.path.exists('tools/eval_stats'):
     os.makedirs('tools/eval_stats')
 
 try:
-    os.remove('tools/eval_stats/log_validation.csv')
+    os.remove('tools/eval_stats/log_validation_Quanv_1_layer_depth_1.csv')
 except OSError:
     pass
 
@@ -164,7 +164,7 @@ def test(epoch):
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-    with open('tools/eval_stats/log_validation.csv', 'a') as f:
+    with open('tools/eval_stats/log_validation_Quanv_1_layer_depth_1.csv', 'a') as f:
         f.write('%.4f, %.4f\n' %(100.*correct/total, test_loss))
 
     # Save checkpoint.
@@ -178,7 +178,7 @@ def test(epoch):
         }
         if not os.path.isdir('pretrained_models'):
             os.mkdir('pretrained_models')
-        torch.save(state, './pretrained_models/Classical-epoch_{}.pth'.format(epoch + 1))
+        torch.save(state, './pretrained_models/Quanv_1_layer_depth_1-epoch_{}.pth'.format(epoch + 1))
         best_acc = acc
 
 for epoch in range(start_epoch, start_epoch+350):
