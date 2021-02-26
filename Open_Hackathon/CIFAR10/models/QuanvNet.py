@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from models.CustomLayers import *
 
 
@@ -29,15 +28,11 @@ class QuanvNet(nn.Module):
         self.fc1 = nn.Linear(64, 32)
         self.fc2 = nn.Linear(32, 3)
 
-        # Quanvolution Layer
-        # self.Quanv1 = Quanv(kernal_size=3, output_depth=4, circuit_layers=1)
 
         # Activation Functions
 
-        # self.AdaptPool = nn.AdaptiveMaxPool2d(3)
         self.pool = nn.MaxPool2d(2, stride=2)
         self.relu = nn.ReLU()
-        # self.sigmoid = nn.Sigmoid()
         self.softmax = nn.Softmax(1)
 
     def forward(self, x):
